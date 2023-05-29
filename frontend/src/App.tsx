@@ -1,21 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import { Route, Link, Routes } from 'react-router-dom';
+import { CreateAuthenticatedRoute } from './components/AuthenticatedRoute';
 
-function App() {
-    const [data, setData] = useState('');
+import { Splash } from './pages/Splash';
+import { Home } from './pages/Dashboard';
+import { SignUp } from './pages/SignUp';
+import { Login } from './pages/Login';
 
-    useEffect(() => {
-        fetch('/api')
-            .then((response) => response.text())
-            .then((data) => setData(data))
-            .catch((error) => console.error(error));
-    }, []);
-
+function Nav() {
     return (
-        <div>
-            <h1>Hello, Frontend!</h1>
-            <div>{data}</div>
-        </div>
+        <nav>
+            <ul>
+                <li>
+                    <Link to="/splash">Splash(Public)</Link>
+                </li>
+                <li>
+                    <Link to="/dashboard">Dashboard(Private)</Link>
+                </li>
+                <li>
+                    <Link to="/login">Login(Public)</Link>
+                </li>
+                <li>
+                    <Link to="/signup">Sign Up(Public)</Link>
+                </li>
+                <li>
+                    <Link to="/anotherprivatepage">Another Private Page(Private)</Link>
+                </li>
+            </ul>
+        </nav>
     );
 }
 
-export default App;
+export default function App() {
+    return (
+        <>
+            <Nav />
+
+            <Routes>
+                <Route path="/splash" element={<Splash />} />
+                <Route {...CreateAuthenticatedRoute({ path: "/dashboard", element: <Home /> })} />
+                <Route path='/signup' element={<SignUp />} />
+                <Route path="/login" element={<Login />} />
+                <Route {...CreateAuthenticatedRoute({ path: "/anotherprivatepage", element: <h1>Another Private Page</h1> })} />
+            </Routes>
+        </>
+    )
+}
