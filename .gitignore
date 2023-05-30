@@ -25,3 +25,5 @@ backend/dist
 
 # Ignore log files
 *.log
+
+backend/fb-admin-secret.json

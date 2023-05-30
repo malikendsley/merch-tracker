@@ -31,16 +31,17 @@ function Nav() {
 }
 
 export default function App() {
+
     return (
         <>
             <Nav />
 
             <Routes>
                 <Route path="/splash" element={<Splash />} />
-                <Route {...CreateAuthenticatedRoute({ path: "/dashboard", element: <Home /> })} />
-                <Route path='/signup' element={<SignUp />} />
-                <Route path="/login" element={<Login />} />
-                <Route {...CreateAuthenticatedRoute({ path: "/anotherprivatepage", element: <h1>Another Private Page</h1> })} />
+                <Route {...CreateAuthenticatedRoute({ path: "/dashboard", element: <Home />, loggedInDestination: "/dashboard", notLoggedInDestination: "/login" })} />
+                <Route {...CreateAuthenticatedRoute({ path: "/signup", element: <SignUp />, loggedInDestination: "/dashboard", notLoggedInDestination: "/signup" })} />
+                <Route {...CreateAuthenticatedRoute({ path: "/login", element: <Login />, loggedInDestination: "/dashboard", notLoggedInDestination: "/login" })} />
+                <Route {...CreateAuthenticatedRoute({ path: "/anotherprivatepage", element: <h1>Another Private Page</h1>, loggedInDestination: "/anotherprivatepage", notLoggedInDestination: "/login" })} />
             </Routes>
         </>
     )

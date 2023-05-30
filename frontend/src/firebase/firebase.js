@@ -16,7 +16,7 @@ export const AuthContext = createContext();
 export const AuthContextProvider = (props) => {
     const [user, setUser] = useState();
     const [error, setError] = useState();
-    const [loading, setLoading] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const auth = getAuth(firebaseApp);

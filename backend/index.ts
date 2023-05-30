@@ -1,33 +1,61 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Router } from 'express';
 import dotenv from 'dotenv';
-import { initializeApp } from 'firebase/app';
+import * as admin from 'firebase-admin';
+import { db, auth } from './firebase/firebase'; 
+//middleware
+import requireAuth from './middleware/requireAuth';
 
 // load environment variables
 dotenv.config();
 
-// Read the Firebase configuration from environment variables
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-};
-
-// Initialize Firebase
-initializeApp(firebaseConfig);
 
 const app: Express = express();
 const port = process.env.PORT || 8000;
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Sus amongus + TypeScript Server');
+const router = Router();
+
+router.get('/test', (req, res) => {
+  // Access the Firebase Admin SDK
+  console.log('test');
+
+  // Access a Firestore collection (replace "users" with your desired collection name)
+  const usersRef = db.collection('users');
+
+  // Add a sample document to the collection
+  usersRef
+    .add({ name: 'John Doe', email: 'johndoe@example.com' })
+    .then((docRef) => {
+      // Document added successfully
+      res.status(200).json({ message: 'Document added', docId: docRef.id });
+    })
+    .catch((error) => {
+      // Error adding document
+      res.status(500).json({ error: 'Failed to add document' });
+    });
 });
 
-app.get('/api', (req: Request, res: Response) => {
-  res.send('Response from Backend');
+router.get('/api/test-protected', requireAuth, (req, res) => {
+    // Access the Firebase Admin SDK
+    console.log('test-protected');
+
+    // Access a Firestore collection (replace "users" with your desired collection name)
+    const usersRef = db.collection('users');
+
+    // Add a sample document to the collection
+    usersRef
+        .add({ name: 'Jane Doe', email: 'janedoe@example.com' })
+        .then((docRef) => {
+            // Document added successfully
+            res.status(200).json({ message: 'Protected Document added', docId: docRef.id });
+        })
+        .catch((error) => {
+            // Error adding document
+            res.status(500).json({ error: 'Failed to add document' });
+        });
 });
+
+// Register the router with the Express app
+app.use(router);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
