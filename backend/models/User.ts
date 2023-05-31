@@ -2,10 +2,10 @@ import { db } from '../firebase/firebase';
 
 
 // Define the User type
-interface User {
-  id: string;
-  email: string;
-  name: string;
+export interface User {
+  uid: string; // user id
+  email: string; // user email
+  name: string; // user name
 }
 
 const collectionName = 'users';
@@ -13,7 +13,7 @@ const collectionName = 'users';
 const UserModel = {
   async createUser(user: User): Promise<void> {
     try {
-      await db.collection(collectionName).doc(user.id).set(user);
+      await db.collection(collectionName).doc(user.uid).set(user);
       console.log('User created successfully.');
     } catch (error) {
       console.error('Error creating user:', error);
@@ -21,9 +21,9 @@ const UserModel = {
     }
   },
 
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(uid: string): Promise<User | null> {
     try {
-      const snapshot = await db.collection(collectionName).doc(id).get();
+      const snapshot = await db.collection(collectionName).doc(uid).get();
       if (snapshot.exists) {
         return snapshot.data() as User;
       } else {
