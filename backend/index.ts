@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin';
 import { db, auth } from './firebase/firebase'; 
 //middleware
 import requireAuth from './middleware/requireAuth';
-
+import { createUser } from './controllers/UserController';
 // load environment variables
 dotenv.config();
 
@@ -12,27 +12,12 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 8000;
 
+//enable access to req.body
+app.use(express.json());
+
 const router = Router();
 
-router.get('/test', (req, res) => {
-  // Access the Firebase Admin SDK
-  console.log('test');
-
-  // Access a Firestore collection (replace "users" with your desired collection name)
-  const usersRef = db.collection('users');
-
-  // Add a sample document to the collection
-  usersRef
-    .add({ name: 'John Doe', email: 'johndoe@example.com' })
-    .then((docRef) => {
-      // Document added successfully
-      res.status(200).json({ message: 'Document added', docId: docRef.id });
-    })
-    .catch((error) => {
-      // Error adding document
-      res.status(500).json({ error: 'Failed to add document' });
-    });
-});
+router.post('/api/register', createUser);
 
 router.get('/api/test-protected', requireAuth, (req, res) => {
     // Access the Firebase Admin SDK

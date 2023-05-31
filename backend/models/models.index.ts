@@ -4,7 +4,7 @@ export type UUID = string;
 // Import models and types separately
 import LogItemModel, { LogItem } from './LogItem';
 import GroupEventModel, { GroupEvent } from './Event';
-import GroupModel, { Group } from './Group';
+import GroupModel, { Group, GroupCode } from './Group';
 import MerchTypeModel, { MerchType } from './MerchType';
 import MerchInstanceModel, { MerchInstance } from './MerchInstance';
 import UserModel, { User } from './User';
@@ -24,6 +24,7 @@ export type {
     LogItem,
     GroupEvent,
     Group,
+    GroupCode,
     MerchType,
     MerchInstance,
     User

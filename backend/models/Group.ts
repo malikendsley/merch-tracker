@@ -1,6 +1,11 @@
 import { db } from '../firebase/firebase';
 import { UUID } from './models.index';
 
+export interface GroupCode {
+    gid: UUID; // group id
+    invideCode: string; // group invite code
+}
+
 // Define the Group type
 export interface Group {
     gid: UUID; // group id
@@ -8,7 +13,6 @@ export interface Group {
     members: UUID[]; // group members
     name: string; // group name
     description: string; // group description
-    inviteCode: string; // group invite code
     events: UUID[]; // group events
 }
 
