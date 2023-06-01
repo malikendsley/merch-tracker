@@ -11,7 +11,7 @@ export async function createUser(req: Request, res: Response): Promise<void> {
 
         // Ensure these are non-null values
         if (!email || !password || !username) {
-            res.status(400).json({ error: 'Invalid request body.' });
+            res.status(400).json({ error: 'Invalid request body for user.' });
             return;
         }
 
@@ -23,8 +23,7 @@ export async function createUser(req: Request, res: Response): Promise<void> {
         });
 
         // Create user in Firestore
-        UserModel.createUser({
-            uid: userRecord.uid,
+        UserModel.createUser(userRecord.uid, {
             email: userRecord.email!,
             name: userRecord.displayName!,
         });
@@ -42,5 +41,52 @@ export async function createUser(req: Request, res: Response): Promise<void> {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to create user.' });
+    }
+}
+
+// Controller function for getting a user by id (basically a wrapper for the UserModel function)
+export async function getUserById(req: Request, res: Response): Promise<void> {
+    console.log(req);
+    try {
+        const user = await UserModel.getUserById(req.params.uid);
+        if (user) {
+            res.locals.user = user;
+            res.status(200).json(user);
+        } else {
+            res.status(404).json({ error: 'User not found.' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to get user.' });
+    }
+}
+
+// Controller function for getting multiple users by their ids (basically a wrapper for the UserModel function)
+// note that this uses req.query instead of req.params
+export async function getUsersByIds(req: Request, res: Response): Promise<void> {
+    
+    // Ensure that the query parameters are valid
+    const queryKeys = Object.keys(req.query);
+    if (queryKeys.length !== 1 || queryKeys[0] !== 'uids') {
+        res.status(400).json({ error: 'Invalid query parameters.' });
+        return;
+    }
+    
+    //convert the query parameter to an array of strings, if it isn't already
+    if (typeof req.query.uids === 'string') {
+        req.query.uids = [req.query.uids];
+    }
+
+    try {
+        const users = await UserModel.getUsersByIds(req.query.uids as string[]);
+        if (users) {
+            res.locals.users = users;
+            res.status(200).json(users);
+        } else {
+            res.status(404).json({ error: 'Users not found.' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to get users.' });
     }
 }

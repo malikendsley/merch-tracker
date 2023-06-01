@@ -1,10 +1,11 @@
 import express, { Express, Router } from 'express';
 import dotenv from 'dotenv';
-import * as admin from 'firebase-admin';
-import { db, auth } from './firebase/firebase'; 
+import { db } from './firebase/firebase'; 
 //middleware
 import requireAuth from './middleware/requireAuth';
-import { createUser } from './controllers/UserController';
+import { createUser, getUserById, getUsersByIds } from './controllers/UserController';
+import { createGroup } from './controllers/GroupController';
+
 // load environment variables
 dotenv.config();
 
@@ -17,7 +18,13 @@ app.use(express.json());
 
 const router = Router();
 
+// User routes
 router.post('/api/register', createUser);
+router.get('/api/user/:uid', getUserById);
+router.get('/api/users', getUsersByIds);
+
+// Group routes
+router.post('/api/group', requireAuth, createGroup);
 
 router.get('/api/test-protected', requireAuth, (req, res) => {
     // Access the Firebase Admin SDK

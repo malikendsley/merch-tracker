@@ -13,3 +13,4 @@ admin.initializeApp({
 // By importing this file, you can access the Firebase Admin SDK
 export const db = admin.firestore();
 export const auth = admin.auth();
+export const firestore = admin.firestore;
