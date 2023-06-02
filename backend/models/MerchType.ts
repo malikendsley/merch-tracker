@@ -3,13 +3,12 @@ import { UUID } from './models.index';
 
 // Define the MerchField type
 export interface MerchType {
-    mtid: UUID; // merch type id
     gid: UUID; // group id (belongs to)
     name: string; // merch type name
     description: string; // merch type description
     imageUrl: string; // merch type image url
     //NB: in a larger system, this would be denormalized
-    requiredAtts: {
+    requiredAttrs: {
         attrName: string;
         attrType: 'categorical' | 'numerical' | 'string';
     }[]; // required fields for the merchandise type

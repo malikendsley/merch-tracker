@@ -100,6 +100,47 @@ const GroupModel = {
             console.error('Error deleting group:', error);
             throw new Error('Failed to delete group.');
         }
+    },
+
+    async resolveCodeToGid(code: string): Promise<UUID | null> {
+        try {
+            const snapshot = await db.collection(codeCollectionName).doc(code).get();
+            if (snapshot.exists) {
+                const groupCode = snapshot.data() as GroupCode;
+                return groupCode.gid;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error resolving code:', error);
+            throw new Error('Failed to resolve code.');
+        }
+    },
+
+    async addMember(gid: UUID, uid: UUID): Promise<void> {
+        try {
+
+            // Check if user is already a member
+            const groupSnapshot = await db.collection(groupCollectionName).doc(gid).get();
+            if (groupSnapshot.exists) {
+                const group = groupSnapshot.data() as Group;
+                if (group.members.includes(uid)) {
+                    throw new Error('User is already a member.');
+                }
+            } else {
+                throw new Error('Group does not exist.');
+            }
+
+            // Add the user to the group
+            const groupRef = db.collection(groupCollectionName).doc(gid);
+            await groupRef.update({
+                members: firestore.FieldValue.arrayUnion(uid),
+            });
+            console.log('Member added successfully.');
+        } catch (error) {
+            console.error('Error adding member:', error);
+            throw new Error('Failed to add member.');
+        }
     }
 };
 

@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import UserModel, { User } from '../models/User';
+import UserModel from '../models/User';
 import { auth } from '../firebase/firebase';
+import { AuthenticatedRequest } from '../middleware/requireAuth';
 
 // Controller function for creating a user
 export async function createUser(req: Request, res: Response): Promise<void> {
     try {
         // Get user details from the request body
-        console.log(req);
         const { email, password, username } = req.body;
 
         // Ensure these are non-null values
@@ -45,10 +45,15 @@ export async function createUser(req: Request, res: Response): Promise<void> {
 }
 
 // Controller function for getting a user by id (basically a wrapper for the UserModel function)
-export async function getUserById(req: Request, res: Response): Promise<void> {
+export async function getUserById(req: AuthenticatedRequest, res: Response): Promise<void> {
     console.log(req);
     try {
-        const user = await UserModel.getUserById(req.params.uid);
+        const { uid } = req.params;
+        if (!uid) {
+            res.status(400).json({ error: 'Invalid request body for user.' });
+            return;
+        }
+        const user = await UserModel.getUserById(uid);
         if (user) {
             res.locals.user = user;
             res.status(200).json(user);
@@ -63,15 +68,15 @@ export async function getUserById(req: Request, res: Response): Promise<void> {
 
 // Controller function for getting multiple users by their ids (basically a wrapper for the UserModel function)
 // note that this uses req.query instead of req.params
-export async function getUsersByIds(req: Request, res: Response): Promise<void> {
-    
+export async function getUsersByIds(req: AuthenticatedRequest, res: Response): Promise<void> {
+
     // Ensure that the query parameters are valid
     const queryKeys = Object.keys(req.query);
     if (queryKeys.length !== 1 || queryKeys[0] !== 'uids') {
         res.status(400).json({ error: 'Invalid query parameters.' });
         return;
     }
-    
+
     //convert the query parameter to an array of strings, if it isn't already
     if (typeof req.query.uids === 'string') {
         req.query.uids = [req.query.uids];
@@ -83,7 +88,7 @@ export async function getUsersByIds(req: Request, res: Response): Promise<void> 
             res.locals.users = users;
             res.status(200).json(users);
         } else {
-            res.status(404).json({ error: 'Users not found.' });
+            res.status(404).json({ error: 'One or more users not found.' });
         }
     } catch (error) {
         console.error(error);

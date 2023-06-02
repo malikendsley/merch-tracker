@@ -1,9 +1,9 @@
 import { db } from '../firebase/firebase';
-import { UUID } from './models.index';
+import merchTypeModel from './MerchType';
+import { MerchType, UUID } from './models.index';
 
 // Define the MerchInstance type
 export interface MerchInstance {
-    miid: UUID; // merch instance id
     mtid: UUID; // merch type id (is a type of)
     name: string; // merch instance name
     imageUrl: string; // merch instance image url
@@ -40,7 +40,49 @@ const merchInstanceModel = {
             console.error('Error getting merch instance:', error);
             throw new Error('Failed to get merch instance.');
         }
+    },
+
+    async  validateMerchInstancesBatch(merchInstances: MerchInstance[]): Promise<MerchInstance[] | null> {
+        try {
+            // Collect all unique mtids
+            const mtids: UUID[] = [...new Set(merchInstances.map(instance => instance.mtid))];
+    
+            // Fetch all corresponding merch types
+            const merchTypes: (MerchType | null)[] = await Promise.all(mtids.map(mtid => merchTypeModel.getMerchTypeById(mtid)));
+    
+            // Construct a map for easy access to the merch types
+            const merchTypeMap: Map<UUID, MerchType> = new Map<UUID, MerchType>();
+            merchTypes.forEach(merchType => {
+                if (merchType) merchTypeMap.set(merchType.gid, merchType);
+            });
+    
+            // Prepare an array to collect invalid instances
+            let invalidInstances: MerchInstance[] = [];
+    
+            // Validate each merch instance
+            for (let merchInstance of merchInstances) {
+                const merchType = merchTypeMap.get(merchInstance.mtid);
+                if (!merchType || !validateAttrs(merchType.requiredAttrs, merchInstance.attrs)) {
+                    invalidInstances.push(merchInstance);
+                }
+            }
+    
+            return invalidInstances.length > 0 ? invalidInstances : null;
+        } catch (error) {
+            console.error('Error validating merch instances batch:', error);
+            return merchInstances;  // Consider returning all instances as invalid if an error occurs
+        }
     }
 };
+
+export function validateAttrs(requiredAttrs: MerchType['requiredAttrs'], instanceAttrs: MerchInstance['attrs']): boolean {
+    for (let attr of instanceAttrs) {
+        let requiredAttr = requiredAttrs.find(ra => ra.attrName === attr.attrsName);
+        if (!requiredAttr || requiredAttr.attrType !== attr.attrsType) {
+            return false;
+        }
+    }
+    return true;
+}
 
 export default merchInstanceModel;

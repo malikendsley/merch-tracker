@@ -2,7 +2,6 @@ import { db } from '../firebase/firebase';
 import { UUID } from './models.index';
 
 export interface GroupEvent {
-  eid: UUID; // GroupEvent id
   gid: UUID; // group id (belongs to)
   name: UUID; // GroupEvent name
   time: string; // GroupEvent time
@@ -10,7 +9,7 @@ export interface GroupEvent {
   contents: {
     miid: UUID; // merch instance id
     count: number; // number of merch
-  }
+  }[]
 }
 
 const GroupEventsCollection = db.collection('GroupEvents');
@@ -42,6 +41,24 @@ const GroupEventModel = {
   },
 
   // Add more methods for updating, deleting, querying GroupEvents, etc.
+  async getGroupEventsByGids(gids: string[]): Promise<GroupEvent[]> {
+    try {
+        const querySnapshot = await GroupEventsCollection
+            .where('gid', 'in', gids)
+            .get();
+
+        const groupEvents: GroupEvent[] = [];
+        querySnapshot.forEach((doc) => {
+            const groupEvent: GroupEvent = doc.data() as GroupEvent;
+            groupEvents.push(groupEvent);
+        });
+
+        return groupEvents;
+    } catch (error) {
+        console.error('Error getting group events:', error);
+        throw new Error('Failed to get group events.');
+    }
+}
 };
 
 export default GroupEventModel;

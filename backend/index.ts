@@ -4,7 +4,7 @@ import { db } from './firebase/firebase';
 //middleware
 import requireAuth from './middleware/requireAuth';
 import { createUser, getUserById, getUsersByIds } from './controllers/UserController';
-import { createGroup } from './controllers/GroupController';
+import { createGroup, getGroupById, getGroupsByIds, joinGroup, resolveCodeToGid } from './controllers/GroupController';
 
 // load environment variables
 dotenv.config();
@@ -19,12 +19,29 @@ app.use(express.json());
 const router = Router();
 
 // User routes
-router.post('/api/register', createUser);
-router.get('/api/user/:uid', getUserById);
-router.get('/api/users', getUsersByIds);
+// Create a user (register)
+router.post('/api/user', createUser);
+
+// Get a user by their id
+router.get('/api/user/:uid', requireAuth, getUserById);
+
+// Get a list of users by their ids
+router.get('/api/users', requireAuth, getUsersByIds);
 
 // Group routes
+// Create a group
 router.post('/api/group', requireAuth, createGroup);
+// Get a group by its id
+router.get('/api/group/:gid', requireAuth, getGroupById);
+// Get a list of groups by their ids
+router.get('/api/groups', requireAuth, getGroupsByIds);
+
+// Join a group by its invite code
+router.param('groupCode', resolveCodeToGid);
+router.post('/api/join/:groupCode', requireAuth, joinGroup);
+
+// Event routes
+router.post('/api/:gid/createevent', requireAuth); //TODO: createEvent);
 
 router.get('/api/test-protected', requireAuth, (req, res) => {
     // Access the Firebase Admin SDK
@@ -34,16 +51,7 @@ router.get('/api/test-protected', requireAuth, (req, res) => {
     const usersRef = db.collection('users');
 
     // Add a sample document to the collection
-    usersRef
-        .add({ name: 'Jane Doe', email: 'janedoe@example.com' })
-        .then((docRef) => {
-            // Document added successfully
-            res.status(200).json({ message: 'Protected Document added', docId: docRef.id });
-        })
-        .catch((error) => {
-            // Error adding document
-            res.status(500).json({ error: 'Failed to add document' });
-        });
+    res.status(200).json({ message: 'You are authorized to access this route.' });
 });
 
 // Register the router with the Express app
