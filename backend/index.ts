@@ -5,6 +5,8 @@ import { db } from './firebase/firebase';
 import requireAuth from './middleware/requireAuth';
 import { createUser, getUserById, getUsersByIds } from './controllers/UserController';
 import { createGroup, getGroupById, getGroupsByIds, joinGroup, resolveCodeToGid } from './controllers/GroupController';
+import { createMerchType, getMerchTypeByMtid, getMerchTypesByGid } from './controllers/MerchTypeController';
+import { createMerchInstance, getMerchInstanceByMiid } from './controllers/MerchInstanceController';
 
 // load environment variables
 dotenv.config();
@@ -42,6 +44,16 @@ router.post('/api/join/:groupCode', requireAuth, joinGroup);
 
 // Event routes
 router.post('/api/:gid/createevent', requireAuth); //TODO: createEvent);
+
+// Merch Type routes
+router.post('/api/merch/types/:gid', requireAuth, createMerchType);
+router.get('/api/merch/types/:mtid', requireAuth, getMerchTypeByMtid);
+router.get('/api/merch/types/gid/:gid', requireAuth, getMerchTypesByGid);
+
+// Merch Instance routes
+router.post('/api/merch/instances/:mtid', requireAuth, createMerchInstance);
+router.get('/api/merch/instances/:miid', requireAuth, getMerchInstanceByMiid);
+router.get('/api/merch/instances/mtid/:mtid', requireAuth, getMerchInstanceByMiid);
 
 router.get('/api/test-protected', requireAuth, (req, res) => {
     // Access the Firebase Admin SDK
