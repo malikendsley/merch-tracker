@@ -21,6 +21,8 @@ export const AuthContextProvider = (props) => {
     useEffect(() => {
         const auth = getAuth(firebaseApp);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
+            console.log("auth state changed")
+            console.log(user)
             setUser(user);
             setLoading(false);
         }, (error) => {
@@ -32,8 +34,11 @@ export const AuthContextProvider = (props) => {
         return () => unsubscribe();
     }, []);
 
-    return <AuthContext.Provider {...props} value={{ user, error, loading }} />;
-}
+    return (
+        <AuthContext.Provider value={{ user, error, loading, setUser, setError }}>
+          {props.children}
+        </AuthContext.Provider>
+      );}
 
 export const useAuthState = () => {
     const auth = useContext(AuthContext);

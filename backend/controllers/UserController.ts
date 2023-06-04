@@ -6,6 +6,8 @@ import { AuthenticatedRequest } from '../middleware/requireAuth';
 // Controller function for creating a user
 export async function createUser(req: Request, res: Response): Promise<void> {
     try {
+        console.log("Create User called");
+        console.log(req.body);
         // Get user details from the request body
         const { email, password, username } = req.body;
 

@@ -74,7 +74,10 @@ const merchInstanceModel = {
         }
     },
 
-    async getMerchInstancesByMtid(mtid: string): Promise<MerchInstance[]> {
+    async getMerchInstancesByMtid(mtid: string, page?: number, pageSize?: number): Promise<MerchInstance[]> {
+        if (page || pageSize) {
+            console.log("WARN: Pagination is not supported yet.");
+        }
         try {
             const snapshot = await merchInstancesCollection.where('mtid', '==', mtid).get();
             const merchInstances: MerchInstance[] = [];

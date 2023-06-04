@@ -1,60 +1,71 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
+import { Form, Button } from 'react-bootstrap';
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../firebase/firebase";
+import { getAuth, signInWithCustomToken } from "firebase/auth";
 
 export const SignUp = () => {
-  const handleSubmit = useCallback(async (e: any) => {
-    e.preventDefault();
-    const { email, password, username } = e.target.elements;
+    const navigate = useNavigate();
+    const { setError } = useContext(AuthContext);
 
-    // Create the request body
-    const requestBody = {
-      email: email.value,
-      password: password.value,
-      username: username.value,
-    };
+    const handleSubmit = useCallback(async (e: any) => {
+        e.preventDefault();
+        const { email, password, username } = e.target.elements;
 
-    // Send the POST request to the endpoint
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+        // Create the request body
+        const requestBody = {
+            email: email.value,
+            password: password.value,
+            username: username.value,
+        };
 
-      if (!response.ok) {
-        throw new Error("Failed to sign up");
-      }
+        // Send the POST request to the endpoint
+        try {
+            const response = await fetch("/api/user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
 
-      const data = await response.json();
-      console.log(data);
-      // Process the response data here, e.g., update the auth context or user context
-    } catch (error) {
-      console.error(error);
-      alert("Failed to sign up");
-    }
-  }, []);
+            if (!response.ok) {
+                throw new Error("Failed to sign up");
+            }
 
-  return (
-    <>
-      <div>
-        <h1>Sign Up</h1>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input name="email" type="email" placeholder="Email" />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" placeholder="Password" />
-          </label>
-          <label>
-            Username
-            <input name="username" type="text" placeholder="Username" />
-          </label>
-          <button type="submit">Sign Up</button>
-        </form>
-      </div>
-    </>
-  );
+            const data = await response.json();
+            console.log(data);
+
+            // sign the user in with the custom token
+            await signInWithCustomToken(getAuth(), data.token);
+            // Redirect to the dashboard
+            navigate("/dashboard");
+        } catch (error) {
+            console.error(error);
+            setError("Failed to sign up");
+        }
+    }, [navigate, setError]);
+
+    return (
+        <>
+            <h1>Sign Up</h1>
+            <Form onSubmit={handleSubmit}>
+                <Form.Group controlId="email">
+                    <Form.Label>Email</Form.Label>
+                    <Form.Control type="email" placeholder="Email" />
+                </Form.Group>
+                <Form.Group controlId="password">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control type="password" placeholder="Password" />
+                </Form.Group>
+                <Form.Group controlId="username">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control type="text" placeholder="Username" />
+                </Form.Group>
+                <Button variant="primary" type="submit" className="mt-3">
+                    Sign Up
+                </Button>
+            </Form>
+        </>
+    );
 };

@@ -1,10 +1,11 @@
 import { Route, Link, Routes } from 'react-router-dom';
 import { CreateAuthenticatedRoute } from './components/AuthenticatedRoute';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Splash } from './pages/Splash';
 import { Home } from './pages/Dashboard';
 import { SignUp } from './pages/SignUp';
 import { Login } from './pages/Login';
+import { Container } from 'react-bootstrap';
 
 function Nav() {
     return (
@@ -35,7 +36,7 @@ export default function App() {
     return (
         <>
             <Nav />
-
+            <Container>
             <Routes>
                 <Route path="/splash" element={<Splash />} />
                 <Route {...CreateAuthenticatedRoute({ path: "/dashboard", element: <Home />, loggedInDestination: "/dashboard", notLoggedInDestination: "/login" })} />
@@ -43,6 +44,7 @@ export default function App() {
                 <Route {...CreateAuthenticatedRoute({ path: "/login", element: <Login />, loggedInDestination: "/dashboard", notLoggedInDestination: "/login" })} />
                 <Route {...CreateAuthenticatedRoute({ path: "/anotherprivatepage", element: <h1>Another Private Page</h1>, loggedInDestination: "/anotherprivatepage", notLoggedInDestination: "/login" })} />
             </Routes>
+            </Container>
         </>
     )
 }
