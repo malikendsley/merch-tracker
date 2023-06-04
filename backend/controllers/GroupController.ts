@@ -1,6 +1,7 @@
 import { AuthenticatedRequest } from './../middleware/requireAuth';
 import { NextFunction, Response } from 'express';
 import GroupModel, { Group } from '../models/Group';
+import UserModel from '../models/User';
 
 // Controller function for creating a group
 export async function createGroup(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -137,5 +138,37 @@ export async function joinGroup(req: AuthenticatedRequest, res: Response): Promi
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to join group.' });
+    }
+}
+
+// Controller function for getting all groups of a user
+export async function getGroupsByUserId(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+        const uid = req.userId;
+        console.log("uid pulled from authorization: " + uid);
+        if (!uid) {
+            res.status(400).json({ error: 'Invalid request body for user.' });
+            return;
+        }
+
+        // Get the user from the database
+        const user = await UserModel.getUserById(uid); // Assume there is a function getUserById in UserModel
+        if (!user) {
+            res.status(404).json({ error: 'User not found.' });
+            return;
+        }
+        // console.log("user found: " + user);
+        // console.log("user.groups: " + user.groups);
+        const groups = await GroupModel.getGroupsByIds(user.groups); // Use the existing getGroupsByIds function
+        if (groups) {
+            res.locals.groups = groups;
+            res.status(200).json(groups);
+        } else {
+            console.log("no groups");
+            res.status(200).json([]);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to get groups.' });
     }
 }

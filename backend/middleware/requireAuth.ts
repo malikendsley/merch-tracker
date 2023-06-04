@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends Request {
 const protectRoute = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Check if the user is authenticated
     const { authorization } = req.headers;
+    console.log("Authorization pulled from headers: " + authorization);
     if (!authorization || !authorization.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
     }

@@ -4,7 +4,7 @@ import { db } from './firebase/firebase';
 //middleware
 import requireAuth from './middleware/requireAuth';
 import { createUser, getUserById, getUsersByIds } from './controllers/UserController';
-import { createGroup, getGroupById, getGroupsByIds, joinGroup, resolveCodeToGid } from './controllers/GroupController';
+import { createGroup, getGroupById, getGroupsByIds, getGroupsByUserId, joinGroup, resolveCodeToGid } from './controllers/GroupController';
 import { createMerchType, getMerchTypeByMtid, getMerchTypesByGid } from './controllers/MerchTypeController';
 import { createMerchInstance, getMerchInstanceByMiid } from './controllers/MerchInstanceController';
 
@@ -37,6 +37,8 @@ router.post('/api/group', requireAuth, createGroup);
 router.get('/api/group/:gid', requireAuth, getGroupById);
 // Get a list of groups by their ids
 router.get('/api/groups', requireAuth, getGroupsByIds);
+// Get all groups of a user
+router.get('/api/groups/user', requireAuth, getGroupsByUserId);
 
 // Join a group by its invite code
 router.param('groupCode', resolveCodeToGid);

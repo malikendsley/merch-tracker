@@ -4,8 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from "react-router-dom";
-import { AuthContextProvider } from './firebase/firebase';
+import { AuthContextProvider } from './contexts/AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { GroupContextProvider } from './contexts/GroupContext';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -14,7 +15,9 @@ root.render(
     <React.StrictMode>
         <Router>
             <AuthContextProvider>
-                <App />
+                <GroupContextProvider>
+                    <App />
+                </GroupContextProvider>
             </AuthContextProvider>
         </Router>
 

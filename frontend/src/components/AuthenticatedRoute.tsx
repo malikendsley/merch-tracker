@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthState } from "../firebase/firebase";
+import { useAuthState } from "../contexts/AuthContext";
 
 interface AuthenticatedRouteProps {
     element: ReactElement;

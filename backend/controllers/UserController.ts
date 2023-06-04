@@ -28,6 +28,7 @@ export async function createUser(req: Request, res: Response): Promise<void> {
         UserModel.createUser(userRecord.uid, {
             email: userRecord.email!,
             name: userRecord.displayName!,
+            groups: [],
         });
 
         // Generate a JWT token for the user

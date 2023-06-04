@@ -5,6 +5,7 @@ import { UUID } from './models.index';
 export interface User {
     email: string; // user email
     name: string; // user name
+    groups: UUID[]; // list of group ids that the user is a member of
 }
 
 const collectionName = 'users';

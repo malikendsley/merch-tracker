@@ -1,12 +1,12 @@
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../firebase/firebase";
+import { useAuthState } from "../contexts/AuthContext";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 
 export const SignUp = () => {
     const navigate = useNavigate();
-    const { setError } = useContext(AuthContext);
+    const { setError } = useAuthState();
 
     const handleSubmit = useCallback(async (e: any) => {
         e.preventDefault();

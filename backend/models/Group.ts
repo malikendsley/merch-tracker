@@ -38,7 +38,9 @@ const GroupModel = {
             const groupCodeRef = db.collection(codeCollectionName).doc(code);
             const groupCode: GroupCode = { gid: groupId };
             batch.set(groupCodeRef, groupCode);
-
+            //also, add the group's uid to the user's groups list
+            const userRef = db.collection('users').doc(group.uid);
+            batch.update(userRef, { groups: firestore.FieldValue.arrayUnion(groupId) });
             await batch.commit();
 
             console.log('Group created successfully.');
@@ -62,9 +64,13 @@ const GroupModel = {
             throw new Error('Failed to get group.');
         }
     },
-
+    
     // get multiple groups by their ids (good for group lists)
     async getGroupsByIds(gids: UUID[]): Promise<Group[] | null> {
+        //if the gids are empty, return null
+        if (gids.length === 0) {
+            return null;
+        }
         try {
             const querySnapshot = await db
                 .collection(groupCollectionName)
