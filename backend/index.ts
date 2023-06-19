@@ -1,12 +1,13 @@
 import express, { Express, Router } from 'express';
 import dotenv from 'dotenv';
-import { db } from './firebase/firebase'; 
+import { db } from './firebase/firebase';
 //middleware
 import requireAuth from './middleware/requireAuth';
 import { createUser, getUserById, getUsersByIds } from './controllers/UserController';
 import { createGroup, getGroupById, getGroupsByIds, getGroupsByUserId, joinGroup, resolveCodeToGid } from './controllers/GroupController';
 import { createMerchType, getMerchTypeByMtid, getMerchTypesByGid } from './controllers/MerchTypeController';
 import { createMerchInstance, getMerchInstanceByMiid } from './controllers/MerchInstanceController';
+import multer from 'multer';
 
 // load environment variables
 dotenv.config();
@@ -14,7 +15,8 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 8000;
-
+const storage = multer.memoryStorage(); // Store files in memory as Buffer objects
+const upload = multer({ storage });
 //enable access to req.body
 app.use(express.json());
 
@@ -48,7 +50,7 @@ router.post('/api/join/:groupCode', requireAuth, joinGroup);
 router.post('/api/:gid/createevent', requireAuth); //TODO: createEvent);
 
 // Merch Type routes
-router.post('/api/merch/types/:gid', requireAuth, createMerchType);
+router.post('/api/merch/types/:gid', requireAuth, upload.single('image'), createMerchType);
 router.get('/api/merch/types/:mtid', requireAuth, getMerchTypeByMtid);
 router.get('/api/merch/types/gid/:gid', requireAuth, getMerchTypesByGid);
 
@@ -58,14 +60,14 @@ router.get('/api/merch/instances/:miid', requireAuth, getMerchInstanceByMiid);
 router.get('/api/merch/instances/mtid/:mtid', requireAuth, getMerchInstanceByMiid);
 
 router.get('/api/test-protected', requireAuth, (req, res) => {
-    // Access the Firebase Admin SDK
-    console.log('test-protected');
+  // Access the Firebase Admin SDK
+  console.log('test-protected');
 
-    // Access a Firestore collection (replace "users" with your desired collection name)
-    const usersRef = db.collection('users');
+  // Access a Firestore collection (replace "users" with your desired collection name)
+  const usersRef = db.collection('users');
 
-    // Add a sample document to the collection
-    res.status(200).json({ message: 'You are authorized to access this route.' });
+  // Add a sample document to the collection
+  res.status(200).json({ message: 'You are authorized to access this route.' });
 });
 
 // Register the router with the Express app

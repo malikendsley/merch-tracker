@@ -1,6 +1,12 @@
 import { db } from '../firebase/firebase';
 import { UUID } from './models.index';
 
+// Define the CategoryList type
+export interface CategoryList {
+  name: string; // category name
+  items: string[]; // category items
+}
+
 // Define the MerchType type
 export interface MerchType {
   gid: UUID; // group id (belongs to)
@@ -8,7 +14,7 @@ export interface MerchType {
   description: string; // merch type description
   imageUrl: string; // merch type image url
   requiredAttrs: {
-    attrName: string;
+    attrName: string | CategoryList;
     attrType: 'categorical' | 'numerical' | 'string';
   }[]; // required fields for the merchandise type
 }

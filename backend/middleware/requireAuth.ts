@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
+import multer from 'multer';
 
 export interface AuthenticatedRequest extends Request {
     userId?: string;
+    //its ok to put this here because only authenticated users can send files to the server
+    file?: Express.Multer.File;
 }
 
 const protectRoute = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

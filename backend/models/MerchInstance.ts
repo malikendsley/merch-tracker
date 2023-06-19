@@ -92,6 +92,8 @@ const merchInstanceModel = {
     }
 };
 
+
+//TODO: Fix this function, validation will need to be more elaborate now that categorical attributes are done properly
 export function validateAttrs(requiredAttrs: MerchType['requiredAttrs'], instanceAttrs: MerchInstance['attrs']): boolean {
     for (let attr of instanceAttrs) {
         let requiredAttr = requiredAttrs.find(ra => ra.attrName === attr.attrsName);

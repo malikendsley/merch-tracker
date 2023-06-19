@@ -1,5 +1,5 @@
-import { db, firestore } from '../firebase/firebase';
-import { UUID } from './models.index';
+import { db, firestore } from "../firebase/firebase";
+import { UUID } from "./models.index";
 
 // Define the GroupCode type
 export interface GroupCode {
@@ -15,38 +15,44 @@ export interface Group {
     events: UUID[]; // group events
 }
 
-const codeCollectionName = 'groupCodes';
-const groupCollectionName = 'groups';
+const codeCollectionName = "groupCodes";
+const groupCollectionName = "groups";
 
 // the functions you can call on the group model
 const GroupModel = {
-
+    // create a new group and add it to the database
     // create a new group and add it to the database
     async createGroup(code: string, group: Group): Promise<void> {
         try {
             // Check if code already exists for another group
-            const codeSnapshot = await db.collection(codeCollectionName).doc(code).get();
+            const codeSnapshot = await db
+                .collection(codeCollectionName)
+                .doc(code)
+                .get();
             if (codeSnapshot.exists) {
-                throw new Error('Code already exists.');
+                throw new Error("Code already exists.");
             }
 
             const batch = db.batch();
             const groupRef = db.collection(groupCollectionName).doc();
             const groupId = groupRef.id;
-            batch.set(groupRef, group);
+            const groupWithGid = { ...group, gid: groupId }; // Add gid field to the group object
+            batch.set(groupRef, groupWithGid);
 
             const groupCodeRef = db.collection(codeCollectionName).doc(code);
             const groupCode: GroupCode = { gid: groupId };
             batch.set(groupCodeRef, groupCode);
             //also, add the group's uid to the user's groups list
-            const userRef = db.collection('users').doc(group.uid);
-            batch.update(userRef, { groups: firestore.FieldValue.arrayUnion(groupId) });
+            const userRef = db.collection("users").doc(group.uid);
+            batch.update(userRef, {
+                groups: firestore.FieldValue.arrayUnion(groupId),
+            });
             await batch.commit();
 
-            console.log('Group created successfully.');
+            console.log("Group created successfully.");
         } catch (error) {
-            console.error('Error creating group:', error);
-            throw new Error('Failed to create group.');
+            console.error("Error creating group:", error);
+            throw new Error("Failed to create group.");
         }
     },
 
@@ -60,11 +66,11 @@ const GroupModel = {
                 return null;
             }
         } catch (error) {
-            console.error('Error getting group:', error);
-            throw new Error('Failed to get group.');
+            console.error("Error getting group:", error);
+            throw new Error("Failed to get group.");
         }
     },
-    
+
     // get multiple groups by their ids (good for group lists)
     async getGroupsByIds(gids: UUID[]): Promise<Group[] | null> {
         //if the gids are empty, return null
@@ -74,7 +80,7 @@ const GroupModel = {
         try {
             const querySnapshot = await db
                 .collection(groupCollectionName)
-                .where(firestore.FieldPath.documentId(), 'in', gids)
+                .where(firestore.FieldPath.documentId(), "in", gids)
                 .get();
 
             if (querySnapshot.empty) {
@@ -89,8 +95,8 @@ const GroupModel = {
 
             return groups;
         } catch (error) {
-            console.error('Error getting groups:', error);
-            throw new Error('Failed to get groups.');
+            console.error("Error getting groups:", error);
+            throw new Error("Failed to get groups.");
         }
     },
 
@@ -101,10 +107,10 @@ const GroupModel = {
             batch.delete(db.collection(groupCollectionName).doc(gid));
             batch.delete(db.collection(codeCollectionName).doc(gid));
             await batch.commit();
-            console.log('Group deleted successfully.');
+            console.log("Group deleted successfully.");
         } catch (error) {
-            console.error('Error deleting group:', error);
-            throw new Error('Failed to delete group.');
+            console.error("Error deleting group:", error);
+            throw new Error("Failed to delete group.");
         }
     },
 
@@ -118,23 +124,25 @@ const GroupModel = {
                 return null;
             }
         } catch (error) {
-            console.error('Error resolving code:', error);
-            throw new Error('Failed to resolve code.');
+            console.error("Error resolving code:", error);
+            throw new Error("Failed to resolve code.");
         }
     },
 
     async addMember(gid: UUID, uid: UUID): Promise<void> {
         try {
-
             // Check if user is already a member
-            const groupSnapshot = await db.collection(groupCollectionName).doc(gid).get();
+            const groupSnapshot = await db
+                .collection(groupCollectionName)
+                .doc(gid)
+                .get();
             if (groupSnapshot.exists) {
                 const group = groupSnapshot.data() as Group;
                 if (group.members.includes(uid)) {
-                    throw new Error('User is already a member.');
+                    throw new Error("User is already a member.");
                 }
             } else {
-                throw new Error('Group does not exist.');
+                throw new Error("Group does not exist.");
             }
 
             // Add the user to the group
@@ -142,12 +150,12 @@ const GroupModel = {
             await groupRef.update({
                 members: firestore.FieldValue.arrayUnion(uid),
             });
-            console.log('Member added successfully.');
+            console.log("Member added successfully.");
         } catch (error) {
-            console.error('Error adding member:', error);
-            throw new Error('Failed to add member.');
+            console.error("Error adding member:", error);
+            throw new Error("Failed to add member.");
         }
-    }
+    },
 };
 
 export default GroupModel;

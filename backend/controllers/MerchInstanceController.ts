@@ -3,14 +3,16 @@ import { Response } from 'express';
 import merchInstanceModel, { MerchInstance, validateAttrs } from '../models/MerchInstance';
 import { MerchType } from '../models/models.index';
 import merchTypeModel from '../models/MerchType';
+import { uploadFileToBucket } from '../util/util';
 
 // Controller function for creating a merch instance
 export async function createMerchInstance(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-        const { name, imageUrl, attrs } = req.body;
+        const { name, attrs } = req.body;
         const mtid = req.params.mtid;
+        const imageFile = req.file;
 
-        if (!mtid || !name || !imageUrl || !Array.isArray(attrs)) {
+        if (!mtid || !name || !imageFile || !Array.isArray(attrs)) {
             res.status(400).json({ error: 'Invalid request body for merch instance.' });
             return;
         }
@@ -29,6 +31,8 @@ export async function createMerchInstance(req: AuthenticatedRequest, res: Respon
             res.status(400).json({ error: 'Invalid attrs for merch instance.' });
             return;
         }
+
+        const imageUrl = await uploadFileToBucket(imageFile, mtid);
 
         const merchInstance: MerchInstance = {
             mtid,
