@@ -1,22 +1,28 @@
 import { db } from '../firebase/firebase';
 import { UUID } from './models.index';
+//Note that the clid, raid, and mtid fields are optional until the category list, required attribute, and merch type are created, respectively.
 
-// Define the CategoryList type
+// Define the CategoryList interface
 export interface CategoryList {
   name: string; // category name
   items: string[]; // category items
 }
 
-// Define the MerchType type
+// Define the MerchType interface
 export interface MerchType {
   gid: UUID; // group id (belongs to)
+  mtid?: UUID; // MerchType ID. optional, until the merch type is created (but immediately available to the client)
   name: string; // merch type name
   description: string; // merch type description
   imageUrl: string; // merch type image url
-  requiredAttrs: {
-    attrName: string | CategoryList;
-    attrType: 'categorical' | 'numerical' | 'string';
-  }[]; // required fields for the merchandise type
+  requiredAttrs?: RequiredAttribute[]; // required fields for the merchandise type
+}
+
+// Define the RequiredAttribute interface
+export interface RequiredAttribute {
+  name: string;
+  type: 'string' | 'categorical' | 'numerical'; // type of attribute category
+  catList?: CategoryList; // category list for categorical attributes
 }
 
 const merchTypesCollection = db.collection('merchTypes');
@@ -24,9 +30,15 @@ const merchTypesCollection = db.collection('merchTypes');
 const merchTypeModel = {
   async createMerchType(merchType: MerchType): Promise<string> {
     try {
-      const docRef = await merchTypesCollection.add(merchType);
-      console.log('Merch type created successfully.');
-      return docRef.id;
+
+      // Create the merch type
+      const merchTypeRef = merchTypesCollection.doc();
+      const mtid = merchTypeRef.id;
+      const parentAndMtid = { ...merchType, mtid };
+      await merchTypeRef.set(parentAndMtid);
+
+      return mtid;
+
     } catch (error) {
       console.error('Error creating merch type:', error);
       throw new Error('Failed to create merch type.');

@@ -1,56 +1,63 @@
 import { AuthenticatedRequest } from './../middleware/requireAuth';
 import { Response } from 'express';
-import merchInstanceModel, { MerchInstance, validateAttrs } from '../models/MerchInstance';
-import { MerchType } from '../models/models.index';
-import merchTypeModel from '../models/MerchType';
-import { uploadFileToBucket } from '../util/util';
+import merchInstanceModel, { Attribute, MerchInstance } from '../models/MerchInstance';
+import merchTypeModel, { RequiredAttribute } from '../models/MerchType';
+
+// Example call:
+// body: {
+//     gid: 'exampleGroupId',
+//     mtid: 'exampleMerchTypeId',
+//     name: 'T-Shirt',
+//     description: 'A comfortable and stylish t-shirt',
+//     attrs: [
+//       {
+//         name: 'Color',
+//         type: 'categorical',
+//         value: 'Red',
+//       },
+//       {
+//         name: 'Size',
+//         type: 'string',
+//         value: 'Medium',
+//       },
+//     ],
+//   }
 
 // Controller function for creating a merch instance
-export async function createMerchInstance(req: AuthenticatedRequest, res: Response): Promise<void> {
+export async function createMerchInstance(req: AuthenticatedRequest, res: Response) {
     try {
-        const { name, attrs } = req.body;
-        const mtid = req.params.mtid;
-        const imageFile = req.file;
+        console.log('Creating merch instance...');
+        console.log(req.body);
+        const { gid, mtid, name, description, attrs } = req.body;
 
-        if (!mtid || !name || !imageFile || !Array.isArray(attrs)) {
-            res.status(400).json({ error: 'Invalid request body for merch instance.' });
+        console.log('gid:', gid);
+        console.log('mtid:', mtid);
+        console.log('name:', name);
+        console.log('description:', description);
+        console.log('attrs:', attrs);
+
+        if (!gid || !mtid || !name || !description) {
+            res.status(400).json({ error: 'Invalid or missing merch instance data.' });
             return;
         }
-
-        // Fetch the merch type
-        const merchType: MerchType | null = await merchTypeModel.getMerchTypeById(mtid);
-
-        // Check if the merch type exists
-        if (!merchType) {
-            res.status(404).json({ error: 'Merch type not found.' });
-            return;
-        }
-
-        // Validate attrs
-        if (!validateAttrs(merchType.requiredAttrs, attrs)) {
-            res.status(400).json({ error: 'Invalid attrs for merch instance.' });
-            return;
-        }
-
-        const imageUrl = await uploadFileToBucket(imageFile, mtid);
 
         const merchInstance: MerchInstance = {
+            gid,
             mtid,
             name,
-            imageUrl,
-            attrs
+            description,
+            attrs: attrs || [],
         };
 
-        // Use your merchInstanceModel.createMerchInstance function to persist the new merchInstance
-        const id = await merchInstanceModel.createMerchInstance(merchInstance);
+        const mid = await merchInstanceModel.createMerchInstance(merchInstance);
 
-        res.status(201).json({ message: 'Merch instance created successfully.', id: id });
-
+        res.status(201).json({ message: 'Merch instance created successfully.', id: mid });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'An error occurred while creating the merch instance.' });
     }
 }
+
 
 // Retrieve a merch instance by miid
 export async function getMerchInstanceByMiid(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -97,4 +104,40 @@ export async function getMerchinstancesByMtid(req: AuthenticatedRequest, res: Re
         console.error(error);
         res.status(500).json({ error: 'An error occurred while retrieving the merch instances.' });
     }
+}
+
+// Given a merch instance, validate that it has all required attributes (called when creating a merch instance)
+export async function validateMerchInstance(merchInstance: MerchInstance): Promise<boolean> {
+    const merchType = await merchTypeModel.getMerchTypeById(merchInstance.mtid);
+    if (!merchType) {
+        return false;
+    }
+
+    const requiredAttrs = merchType.requiredAttrs ?? [];
+    const instanceAttrs = merchInstance.attrs ?? [];
+
+    // Check if the number of required attributes matches the number of instance attributes
+    if (requiredAttrs.length !== instanceAttrs.length) {
+        return false;
+    }
+
+    // Check if each required attribute exists in the instance attributes
+    for (const reqAttr of requiredAttrs) {
+        const matchingAttr = instanceAttrs.find((attr) => isValidAttr(reqAttr, attr));
+        if (!matchingAttr) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function isValidAttr(reqAttr: RequiredAttribute, attr: Attribute): boolean {
+    if (reqAttr.name !== attr.name || reqAttr.type !== attr.type) {
+        return false;
+    }
+    if (reqAttr.type === 'categorical') {
+        return reqAttr.catList?.items.includes(attr.value as string) ?? false;
+    }
+    return true;
 }

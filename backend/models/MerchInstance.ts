@@ -1,17 +1,20 @@
 import { db } from '../firebase/firebase';
-import merchTypeModel from './MerchType';
-import { MerchType, UUID } from './models.index';
+import { UUID } from './models.index';
 
-// Define the MerchInstance type
+// Define the AttributeValue interface
+export interface Attribute {
+    name: string;
+    type: 'string' | 'categorical' | 'numerical'; // type of attribute category
+    value: string | string[] | number;
+}
+
+// Define the MerchInstance interface
 export interface MerchInstance {
-    mtid: UUID; // merch type id (is a type of)
+    gid: UUID; // group id (belongs to)
+    mtid: UUID; // MerchType ID
     name: string; // merch instance name
-    imageUrl: string; // merch instance image url
-    attrs: {
-        attrsName: string;
-        attrsType: 'categorical' | 'numerical' | 'string';
-        value: string | number; // Add the value property to hold the attribute value
-    }[]; // merch instance attributes (must match required attrs of merch type)
+    description: string; // merch instance description
+    attrs?: Attribute[]; // attribute values for the merch instance
 }
 
 const merchInstancesCollection = db.collection('merchInstances');
@@ -19,9 +22,10 @@ const merchInstancesCollection = db.collection('merchInstances');
 const merchInstanceModel = {
     async createMerchInstance(merchInstance: MerchInstance): Promise<string> {
         try {
-            const docRef = await merchInstancesCollection.add(merchInstance);
-            console.log('Merch instance created successfully.');
-            return docRef.id;
+            const merchInstanceRef = merchInstancesCollection.doc(); // Create a new document reference
+            const mid = merchInstanceRef.id; // Obtain the unique ID of the document reference
+            await merchInstanceRef.set({ ...merchInstance, mid }); // Set the document data with the merged mid
+            return mid; // Return the unique ID
         } catch (error) {
             console.error('Error creating merch instance:', error);
             throw new Error('Failed to create merch instance.');
@@ -39,38 +43,6 @@ const merchInstanceModel = {
         } catch (error) {
             console.error('Error getting merch instance:', error);
             throw new Error('Failed to get merch instance.');
-        }
-    },
-
-    async validateMerchInstancesBatch(merchInstances: MerchInstance[]): Promise<MerchInstance[] | null> {
-        try {
-            // Collect all unique mtids
-            const mtids: UUID[] = [...new Set(merchInstances.map(instance => instance.mtid))];
-
-            // Fetch all corresponding merch types
-            const merchTypes: (MerchType | null)[] = await Promise.all(mtids.map(mtid => merchTypeModel.getMerchTypeById(mtid)));
-
-            // Construct a map for easy access to the merch types
-            const merchTypeMap: Map<UUID, MerchType> = new Map<UUID, MerchType>();
-            merchTypes.forEach(merchType => {
-                if (merchType) merchTypeMap.set(merchType.gid, merchType);
-            });
-
-            // Prepare an array to collect invalid instances
-            let invalidInstances: MerchInstance[] = [];
-
-            // Validate each merch instance
-            for (let merchInstance of merchInstances) {
-                const merchType = merchTypeMap.get(merchInstance.mtid);
-                if (!merchType || !validateAttrs(merchType.requiredAttrs, merchInstance.attrs)) {
-                    invalidInstances.push(merchInstance);
-                }
-            }
-
-            return invalidInstances.length > 0 ? invalidInstances : null;
-        } catch (error) {
-            console.error('Error validating merch instances batch:', error);
-            return merchInstances;  // Consider returning all instances as invalid if an error occurs
         }
     },
 
@@ -92,16 +64,5 @@ const merchInstanceModel = {
     }
 };
 
-
-//TODO: Fix this function, validation will need to be more elaborate now that categorical attributes are done properly
-export function validateAttrs(requiredAttrs: MerchType['requiredAttrs'], instanceAttrs: MerchInstance['attrs']): boolean {
-    for (let attr of instanceAttrs) {
-        let requiredAttr = requiredAttrs.find(ra => ra.attrName === attr.attrsName);
-        if (!requiredAttr || requiredAttr.attrType !== attr.attrsType) {
-            return false;
-        }
-    }
-    return true;
-}
 
 export default merchInstanceModel;
