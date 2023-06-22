@@ -3,43 +3,11 @@ import { Response } from "express";
 import merchTypeModel, { MerchType } from "../models/MerchType";
 import { uploadFileToBucket } from "../util/util";
 
-// Example call:
-// body: {
-//   name: 'T-Shirt',
-//   description: 'A comfortable and stylish t-shirt',
-//   requiredAttrs: [
-//     {
-//       name: 'Color',
-//       type: 'categorical',
-//       catList: {
-//         name: 'Color',
-//         options: ['Red', 'Blue', 'Green'],
-//       },
-//     },
-//     {
-//       name: 'Size',
-//       type: 'string',
-//     },
-//   ],
-// },
-// params: {
-//   gid: 'exampleGroupId',
-// },
-// file: '<file object>', // Replace with an actual file object
-
-// Controller function for creating a merch type
-export async function createMerchType(req: AuthenticatedRequest, res: Response) {
+export async function createMerchType(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    console.log('Creating merch type...');
-    console.log(req.body);
     const { name, description } = req.body;
     const { gid } = req.params;
     const imageFile = req.file;
-
-    console.log('gid: ' + gid);
-    console.log('name: ' + name);
-    console.log('description: ' + description);
-    console.log('imageFile: ' + imageFile);
 
     if (!name || !description || !gid || !imageFile) {
       res.status(400).json({ error: 'Invalid or missing merch type data.' });
@@ -47,27 +15,27 @@ export async function createMerchType(req: AuthenticatedRequest, res: Response) 
     }
 
     const imageUrl = await uploadFileToBucket(imageFile, gid);
+    const parsedAttrs = JSON.parse(req.body.requiredAttrs);
 
-    const merchType: MerchType = {
+    const createdMerchType: MerchType = {
       gid,
-      mtid: undefined, // Set mtid to undefined initially
+      mtid: undefined,
       name,
       description,
       imageUrl,
-      requiredAttrs: req.body.requiredAttrs || [], // Assign requiredAttrs from the request body or an empty array
+      requiredAttrs: parsedAttrs || [],
     };
 
-    const id = await merchTypeModel.createMerchType(merchType);
+    const id = await merchTypeModel.createMerchType(createdMerchType);
 
-    res.status(201).json({ message: 'Merch type created successfully.', id: id });
+    res.status(201).json({ message: 'Merch type created successfully.', id });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'An error occurred while creating the merch type.' });
   }
 }
 
-// Retrieve a merch type by mtid
-export async function getMerchTypeByMtid(req: AuthenticatedRequest, res: Response) {
+export async function getMerchTypeByMtid(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { mtid } = req.params;
 
@@ -90,8 +58,7 @@ export async function getMerchTypeByMtid(req: AuthenticatedRequest, res: Respons
   }
 }
 
-// Retrieve all merch types with a given gid, optional pagination
-export async function getMerchTypesByGid(req: AuthenticatedRequest, res: Response) {
+export async function getMerchTypesByGid(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { gid } = req.params;
     const { page, pageSize } = req.query;
