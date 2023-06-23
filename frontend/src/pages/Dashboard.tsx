@@ -3,6 +3,7 @@ import { useAuthState } from "../contexts/AuthContext";
 import { Tab, Nav, Button } from "react-bootstrap";
 import { authedFetch } from "../utility/AuthedFetch";
 import MerchandiseTab from "../components/MerchandiseTab";
+import "../css/AllMerchGrid.css";
 
 export const Home = () => {
   const { user } = useAuthState();
